@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🐉 HyperDragonAI Cloud</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial; background: #111; color: white; padding: 15px; }
+        h1 { color: #ff6b00; margin-bottom: 10px; font-size: 1.5rem; }
+        .chat { border: 1px solid #333; border-radius: 10px; padding: 15px; }
+        #messages { height: 300px; overflow-y: auto; margin-bottom: 10px; }
+        .msg { margin: 8px 0; padding: 10px; border-radius: 5px; }
+        .user { background: #1a1a1a; }
+        .ai { background: #2a1a00; }
+        textarea { width: 100%; height: 80px; background: #222; color: white; border: 1px solid #444; padding: 10px; margin-bottom: 10px; }
+        button { width: 100%; background: #ff6b00; color: white; border: none; padding: 12px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🐉 HyperDragonAI Cloud</h1>
+    <p style="color: #aaa; margin-bottom: 15px;">Free Cloud AI - Phone Optimized</p>
+    
+    <div class="chat">
+        <div id="messages">
+            <div class="msg ai">🚀 Ready! Phone version</div>
+        </div>
+        
+        <textarea id="input" placeholder="Short prompt..."></textarea>
+        <button onclick="send()">Send</button>
+    </div>
+    
+    <script>
+        async function send() {
+            const input = document.getElementById('input');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            // Add user message
+            const msgDiv = document.getElementById('messages');
+            msgDiv.innerHTML += `<div class="msg user">${text}</div>`;
+            input.value = '';
+            
+            // Add loading
+            msgDiv.innerHTML += '<div class="msg ai">🤔 Thinking...</div>';
+            msgDiv.scrollTop = msgDiv.scrollHeight;
+            
+            try {
+                // SUPER SIMPLE API call
+                const response = await fetch('https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({inputs: text, parameters: {max_new_tokens: 300}})
+                });
+                
+                const data = await response.json();
+                const result = data[0]?.generated_text || "No response";
+                
+                // Remove loading
+                msgDiv.removeChild(msgDiv.lastChild);
+                // Add response
+                msgDiv.innerHTML += `<div class="msg ai">${result.slice(0, 200)}</div>`;
+                
+            } catch {
+                msgDiv.removeChild(msgDiv.lastChild);
+                msgDiv.innerHTML += '<div class="msg ai">❌ API busy. Try short prompt.</div>';
+            }
+            
+            msgDiv.scrollTop = msgDiv.scrollHeight;
+        }
+        
+        // Enter key
+        document.getElementById('input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                send();
+            }
+        });
+    </script>
+</body>
+</html>
